@@ -1,145 +1,90 @@
-# Foodie.AI - Manhattan Restaurant Recommendation System
+# Foodie.AI 🍜
 
-A smart restaurant recommendation system for Manhattan that helps users find restaurants based on their food cravings. The system uses semantic embeddings with FAISS for fast similarity search to match user queries with restaurant reviews.
+**Find Manhattan restaurants by describing what you're craving.**
+
+Foodie.AI is a semantic restaurant recommender for Manhattan. Instead of filtering by cuisine tags, you type a craving in plain language, such as *"spicy Thai noodles"* or *"authentic handmade pasta"*. Foodie.AI then matches it against real restaurant reviews to surface the places that best fit what you want.
+
+> Team project · Columbia University · Original repository: [albertchiyh/Foodie.AI](https://github.com/albertchiyh/Foodie.AI)
+
+---
+
+## The problem
+
+Restaurant apps make you search by category ("Thai", "Italian") or scroll through star ratings. But people usually decide what to eat based on a *craving*, a specific dish, flavor or experience. That information lives in reviews, not in category filters.
+
+Foodie.AI closes that gap by searching **what diners actually wrote about the food**.
 
 ## Features
 
-- **AI-Powered Search**: Natural language search understands exactly what you're craving
-- **Location-Based Filtering**: Filter restaurants by Manhattan neighborhood
-- **FAISS Similarity Search**: Fast and efficient semantic search using FAISS index
-- **Review-Based Matching**: Matches user queries with restaurant reviews using SentenceTransformer embeddings
-- **Restaurant Recommendations**: Get restaurants with match scores, ratings, and reviews
+- **Natural-language search**: describe a dish, flavor or vibe in your own words
+- **Neighborhood filter**: narrow results to areas such as Chinatown, SoHo or Harlem
+- **Ranked by relevance**: each result shows a match score, along with name, cuisine, address, rating and the review snippet that matched your craving
+- **Fast responses**: precomputed review embeddings with FAISS similarity search
 
-## Installation
+## How it works
 
-1. Install required dependencies:
+1. Restaurant reviews are converted into vector embeddings with SentenceTransformer (`all-MiniLM-L6-v2`) and stored in a FAISS index.
+2. The user's craving is embedded with the same model.
+3. FAISS finds the reviews with the closest meaning (cosine similarity), optionally filtered by neighborhood.
+4. Matching restaurants are ranked and returned with the most relevant review snippet.
+
+## Tech stack
+
+| Layer | Tools |
+|---|---|
+| Backend | FastAPI, Pydantic |
+| Search | FAISS, SentenceTransformers (`all-MiniLM-L6-v2`) |
+| Data | Pandas, NumPy |
+| Frontend | HTML, CSS, JavaScript |
+
+## Getting started
 
 ```bash
 pip install -r requirements.txt
 ```
 
-2. Ensure you have the required data files in the `static/` directory:
-   - `manhattan_FoodieAI.csv`: CSV file with restaurant data
-   - `text_FoodieAI_index.faiss`: FAISS index file with pre-computed embeddings
-
-3. Run the application:
+Make sure `manhattan_FoodieAI.csv` and `text_FoodieAI_index.faiss` are in the `static/` folder, then run:
 
 ```bash
 python app.py
 ```
 
-The application will start at `http://localhost:8000`
+Open http://localhost:8000 in your browser.
 
-## Usage
+### API
 
-1. **Search for Restaurants**:
-   - Go to the web interface at `http://localhost:8000`
-   - Describe your food craving in natural language (e.g., "spicy Thai crab curry", "authentic Italian pasta")
-   - Optionally select a Manhattan neighborhood to filter results
-   - Click "Find My Perfect Restaurant" to get recommendations
+`POST /search-restaurants`
 
-2. **View Results**:
-   - See restaurants ranked by match score (cosine similarity)
-   - View restaurant details: name, cuisine type, address, rating
-   - Read review snippets that match your query
-
-## API Endpoints
-
-### Search Restaurants
-
-```
-POST /search-restaurants
-Content-Type: application/json
-
-{
-  "query": "spicy Thai crab curry",
-  "neighborhood": "chinatown",  // optional
-  "top_k": 10
-}
-```
-
-Response:
 ```json
 {
-  "restaurants": [
-    {
-      "name": "Restaurant Name",
-      "address": "123 Main St",
-      "cuisine_type": "Thai",
-      "rating": 4.5,
-      "match_score": 0.85,
-      "zipcode": 10013,
-      "review_clean": "Great Thai food..."
-    }
-  ],
-  "query": "spicy Thai crab curry",
-  "total_matches": 10,
-  "processing_time": 0.123
+  "query": "spicy Thai noodles",
+  "neighborhood": "Chinatown",
+  "top_k": 5
 }
 ```
 
-## How It Works
+Returns ranked restaurants with name, address, cuisine, rating, match score, zip code and a matching review snippet.
 
-1. **Data Loading**: Restaurant data is loaded from CSV file with reviews
-2. **FAISS Index**: Pre-computed embeddings stored in FAISS index for fast search
-3. **Query Embedding**: User query is embedded using SentenceTransformer ('all-MiniLM-L6-v2')
-4. **Similarity Search**: FAISS performs fast cosine similarity search
-5. **Neighborhood Filtering**: Results are filtered by zipcode based on selected neighborhood
-6. **Ranking**: Results are ranked by match score (cosine similarity)
-
-## File Structure
+## Project structure
 
 ```
-├── app.py                              # Main FastAPI application
-├── models.py                           # Pydantic data models
-├── utils.py                            # Embedding utilities (SentenceTransformer)
-├── services/
-│   ├── restaurant_service.py          # CSV loading and FAISS index management
-│   └── restaurant_search_service.py   # Restaurant search logic with FAISS
-├── static/
-│   ├── index.html                     # Frontend HTML interface
-│   ├── manhattan_FoodieAI.csv         # Restaurant data CSV
-│   └── text_FoodieAI_index.faiss     # FAISS index file
-├── requirements.txt                    # Python dependencies
-└── README.md                          # This file
+app.py          FastAPI application
+models.py       Pydantic request/response models
+utils.py        Embedding utilities
+services/       CSV/FAISS loading and search logic
+static/         Web frontend, restaurant dataset and FAISS index
+Doc/            Project presentation
 ```
 
-## Neighborhood Mapping
+## Team and contributions
 
-The system supports filtering by Manhattan neighborhoods:
+This was a four-person team project.
 
-- Lower East Side
-- Chinatown
-- SoHo
-- Greenwich Village
-- East Village
-- Chelsea
-- Midtown
-- Upper West Side
-- Upper East Side
-- Harlem
-- Washington Heights
+**Sarah Yumni Pradita** ([@srhyumni](https://github.com/srhyumni)): Product lead
+- Came up with the product idea and defined the problem: searching restaurants by craving instead of by category
+- Sourced and selected the Manhattan restaurant and review data used to build the search index
+- Designed the product features, including natural-language search, neighborhood filtering and review-snippet results
+- Designed and coded the web interface (HTML/CSS)
+- Built and delivered the final project presentation
 
-Each neighborhood is mapped to specific zipcodes for accurate filtering.
-
-## Technologies Used
-
-- **FastAPI**: Web framework for building APIs
-- **FAISS**: Facebook AI Similarity Search for efficient vector search
-- **SentenceTransformer**: For generating semantic embeddings
-- **Pandas**: For CSV data processing
-- **NumPy**: For numerical operations
-
-## Customization
-
-- Modify `services/restaurant_service.py` to change CSV parsing logic or neighborhood mappings
-- Adjust `services/restaurant_search_service.py` for different search algorithms
-- Update the UI in `static/index.html` for different interface designs
-- Modify embedding models in `utils.py` (currently uses 'all-MiniLM-L6-v2')
-
-## Troubleshooting
-
-- Ensure CSV file and FAISS index are in the `static/` directory
-- Check that the FAISS index matches the CSV data (same number of rows)
-- Verify embeddings were created with the same model ('all-MiniLM-L6-v2')
-- Check console logs for error messages during startup or search
+**Albert Chi** ([@albertchiyh](https://github.com/albertchiyh)) and **Prisca Chang** ([@priscachang](https://github.com/priscachang)): backend, embeddings and search implementation
